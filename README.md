@@ -7,3 +7,5 @@
 - `tujian.md` — 图鉴数据 master（紫 103 件、金 100 件），格式一行一件：`名称，价格，占格`
 - `sync_tujian.py` — 本地把 tujian.md 同步进工具的数据块
 - `extract_tujian.py` — 从游戏图鉴截图自动提取物品占格（PIL + numpy）
+
+仅供游戏辅助参考。
