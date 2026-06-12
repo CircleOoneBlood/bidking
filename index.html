@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1115">
+<title>BidKing 估价助手 v2 · 数格子流</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2a2f3a;
+    --txt:#e8eaed; --dim:#9aa3b2; --accent:#ffcc4d; --good:#5cd6a0; --warn:#ff7a7a;
+    --purple:#b06bff; --gold:#ffcc4d; --red:#ff6b6b; --blue:#5aa9ff; --green:#5cd6a0; --white:#dfe4ea;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",Roboto,sans-serif;}
+  body{padding:14px 12px 60px;max-width:520px;margin:0 auto;}
+  h1{font-size:18px;margin:2px 0 2px;letter-spacing:.5px}
+  .sub{color:var(--dim);font-size:12px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1;padding:12px 6px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--dim);font-size:15px;font-weight:600}
+  .seg button.on{background:var(--accent);color:#1a1a1a;border-color:var(--accent)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
+  .row label{font-size:15px;font-weight:600}
+  .row .hint{font-size:11px;color:var(--dim);font-weight:400;display:block;margin-top:2px}
+  .stepper{display:flex;align-items:center;gap:0;flex:0 0 auto}
+  .stepper button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);font-size:22px;font-weight:700;line-height:1}
+  .stepper input{width:64px;height:42px;text-align:center;font-size:20px;font-weight:700;
+    border:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:#10131a;color:var(--txt);margin:0 -1px}
+  input[type=text]{height:42px;border-radius:10px;border:1px solid var(--line);background:#10131a;
+    color:var(--txt);font-size:16px;padding:0 12px;width:100%}
+  .dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+  .result{background:linear-gradient(160deg,#1d2230,#181b22);border-color:#33405c}
+  .rec{font-size:46px;font-weight:800;color:var(--accent);line-height:1;margin:4px 0}
+  .range{font-size:15px;color:var(--dim)}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:12px;color:var(--dim)}
+  .chip b{color:var(--txt);font-size:14px}
+  details{margin-bottom:12px}
+  details>summary{list-style:none;cursor:pointer;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;color:var(--dim)}
+  details>summary::-webkit-details-marker{display:none}
+  details[open]>summary{border-radius:12px 12px 0 0;color:var(--txt)}
+  details .body{background:var(--card);border:1px solid var(--line);border-top:none;
+    border-radius:0 0 12px 12px;padding:12px 14px}
+  .mini{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+  .mini label{font-size:13px;color:var(--dim)}
+  .mini input{width:90px;height:36px;text-align:center;font-size:15px;border-radius:8px;
+    border:1px solid var(--line);background:#10131a;color:var(--txt)}
+  .warnbox{color:var(--warn);font-size:13px;margin-top:6px}
+  .btn-ghost{background:var(--card2);border:1px solid var(--line);color:var(--dim);
+    border-radius:9px;padding:9px 12px;font-size:13px}
+  .legend{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .legend b{color:var(--txt)}
+  /* ===== 比例调节器（竖向滑条） ===== */
+  .ratio-wrap{display:flex;gap:16px;align-items:stretch}
+  .ratio-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px}
+  .ri{font-size:13px;color:var(--dim)} .ri b{color:var(--txt);font-size:16px}
+  .vslider{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
+  .vslider button{width:46px;height:38px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);font-size:20px;font-weight:700;line-height:1}
+  .vlabel{font-size:10px;color:var(--dim)}
+  .vtrack{position:relative;width:46px;height:170px;touch-action:none;cursor:pointer}
+  .vtrack::before{content:'';position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:10px;border-radius:5px;
+    background:linear-gradient(180deg,var(--gold) 0%,var(--red) 38%,var(--purple) 100%);opacity:.9}
+  .vthumb{position:absolute;left:0;width:46px;height:18px;border-radius:9px;background:#fff;
+    border:2px solid #00000088;box-shadow:0 2px 6px #00000088;pointer-events:none}
+  .vtick{position:absolute;left:-4px;right:-4px;height:0;border-top:2px dashed #ffffff55;pointer-events:none}
+  .vtrack.mode-gr::before{background:linear-gradient(180deg,var(--gold) 0%,var(--red) 100%)}
+  .vtrack.mode-pr::before{background:linear-gradient(180deg,var(--purple) 0%,var(--red) 100%)}
+  /* 候选格数一排可点选 */
+  .cands{display:flex;gap:6px;overflow-x:auto;padding:2px 0;margin:6px 0 2px;scrollbar-width:thin}
+  .cands button{flex:0 0 auto;min-width:42px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--card2);color:var(--dim);font-size:13px;font-weight:600}
+  .cands button.on{background:var(--accent);color:#1a1a1a;border-color:var(--accent)}
+  /* ===== 桌面端：左右双栏一屏放下 ===== */
+  @media(min-width:980px){
+    body{max-width:1100px}
+    #cols{display:flex;gap:22px;align-items:flex-start}
+    #cols .col{flex:1;min-width:0;display:flex;flex-direction:column}
+    #cols .col>*{width:100%}
+    #resultCard{order:-1}
+  }
+</style>
+</head>
+<body>
+  <h1>BidKing 估价助手 <span style="color:var(--accent);font-size:13px;vertical-align:5px">v2</span></h1>
+  <div class="sub">数格子流（伊森）· 颜色单价 × 比例</div>
+
+  <div id="cols">
+  <div class="col">
+
+  <!-- 模式 -->
+  <div class="card" style="padding:10px">
+    <div style="display:flex;gap:8px;align-items:stretch">
+      <div class="seg" id="modeSeg" style="flex:1"></div>
+      <button class="btn-ghost" id="clearAll" style="flex:0 0 auto;font-size:12px;line-height:1.3">清空<br>重开</button>
+    </div>
+  </div>
+
+  <!-- 核心输入 -->
+  <div class="card">
+    <div class="row">
+      <div><label>总格数</label><span class="hint">仓库总格子</span></div>
+      <div class="stepper" data-k="total"></div>
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--green)"></span><span class="dot" style="background:var(--white);margin-left:-4px"></span>绿白格数</label><span class="hint">忽略不计价</span></div>
+      <div class="stepper" data-k="gw"></div>
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--blue)"></span>蓝色格数</label><span class="hint">按单价计（默认 0.12w/格）</span></div>
+      <div class="stepper" data-k="blue"></div>
+    </div>
+    <div class="legend">紫金红池 = 总 − 绿白 − 蓝 = <b id="poolR">—</b> 格</div>
+  </div>
+
+  <!-- 进阶输入 -->
+  <div class="card" id="advCard" style="display:none">
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--purple)"></span>紫色均格</label><span class="hint">游戏显示值（两位小数）</span></div>
+      <input type="text" id="avgGrid" inputmode="decimal" placeholder="如 7.33" style="width:110px;flex:0 0 auto;text-align:center">
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--purple)"></span>紫色均价</label><span class="hint">游戏显示值（金币，两位小数）</span></div>
+      <input type="text" id="avgPrice" inputmode="decimal" placeholder="如 25628.00" style="width:130px;flex:0 0 auto;text-align:center">
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--purple)"></span>紫色总格</label><span class="hint">不填 = 自动推断；＋/− 跳候选</span></div>
+      <div class="stepper"><button id="pPrev">−</button><input id="purpleTotal" inputmode="numeric" placeholder="—"><button id="pNext">＋</button></div>
+    </div>
+    <div class="cands" id="pCands" style="display:none"></div>
+    <button class="btn-ghost" id="autoBtnP" style="display:none">↺ 紫色改回自动</button>
+    <div style="border-top:1px solid var(--line);margin:12px 0 2px"></div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--gold)"></span>金色均格</label><span class="hint">游戏显示值（两位小数）</span></div>
+      <input type="text" id="goldAvgGrid" inputmode="decimal" placeholder="如 3.50" style="width:110px;flex:0 0 auto;text-align:center">
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--gold)"></span>金色均价</label><span class="hint">游戏显示值（金币，两位小数）</span></div>
+      <input type="text" id="goldAvgPrice" inputmode="decimal" placeholder="如 38745.00" style="width:130px;flex:0 0 auto;text-align:center">
+    </div>
+    <div class="row">
+      <div><label><span class="dot" style="background:var(--gold)"></span>金色总格</label><span class="hint">不填 = 自动推断；＋/− 跳候选</span></div>
+      <div class="stepper"><button id="gPrev">−</button><input id="goldTotal" inputmode="numeric" placeholder="—"><button id="gNext">＋</button></div>
+    </div>
+    <div class="cands" id="gCands" style="display:none"></div>
+    <button class="btn-ghost" id="autoBtnG" style="display:none">↺ 金色改回自动</button>
+    <div class="legend" id="advInfo">—</div>
+    <div class="legend" id="goldInfo"></div>
+    <div class="legend" id="comboInfo" style="display:none"></div>
+  </div>
+
+  </div><!-- /col 左 -->
+  <div class="col">
+
+  <!-- 比例调节器 -->
+  <div class="card">
+    <div class="ratio-wrap">
+      <div class="ratio-info">
+        <div class="ri" id="shareLine">—</div>
+        <div class="ri">≈ 紫:金:红 <b id="eqRatio">—</b></div>
+        <div class="ri" id="unitLine">—</div>
+        <div class="ri" id="ratioState" style="display:none;color:var(--accent);font-size:11px"></div>
+        <button class="btn-ghost" id="resetS" style="margin-top:6px;align-self:flex-start">回默认比例</button>
+      </div>
+      <div class="vslider">
+        <span class="vlabel" id="vlabTop">金红 多</span>
+        <button id="grPlus">＋</button>
+        <div class="vtrack" id="vtrack"><div class="vtick" id="vtick"></div><div class="vthumb" id="vthumb"></div></div>
+        <button id="grMinus">−</button>
+        <span class="vlabel" id="vlabBot">紫 多</span>
+      </div>
+    </div>
+    <div class="legend" id="ratioNote">滑条永远调<b>当前未确定的部分</b>：基础 = 紫↔金红；定了紫 = 金↔红；定了金 = 紫↔红；紫金都定 = 从动展示。虚线是默认位置，＋/− 每次 1%。</div>
+  </div>
+
+  <!-- 结果 -->
+  <div class="card result" id="resultCard">
+    <div class="range">推荐出价</div>
+    <div class="rec"><span id="rec">—</span><span style="font-size:18px;color:var(--dim)"> w</span></div>
+    <div class="meta" id="chips"></div>
+    <div class="warnbox" id="warn"></div>
+  </div>
+
+  <!-- 校准参数 -->
+  <details>
+    <summary>校准参数（按实战调）</summary>
+    <div class="body" id="calib"></div>
+  </details>
+
+  </div><!-- /col 右 -->
+  </div><!-- /cols -->
+
+  <script>
+  // ===== 模型默认参数（可在校准面板修改，存 localStorage） =====
+  const DEFAULTS = {
+    priceBlue:0.12,   // 蓝 w/格
+    pricePurple:0.25, // 紫 w/格
+    priceGold:1,      // 金 w/格
+    priceRed:5,       // 红 w/格
+    defP:7, defG:4, defR:1,  // 默认 紫:金:红
+  };
+
+  const KEY='bidking_v2';
+  function load(){ try{return Object.assign({},DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return {...DEFAULTS};} }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+  let state = load();
+  // 运行态输入：s=当前紫占比（null=跟随默认比例）
+  state.inputs = Object.assign({mode:'basic', total:0, gw:0, blue:0, s:null, gr2:null, pr2:null,
+    avgGrid:'', avgPrice:'', purpleTotal:'', goldAvgGrid:'', goldAvgPrice:'', goldTotal:''}, state.inputs||{});
+
+  const $=s=>document.querySelector(s);
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const fmt=x=>(Math.round(x*10)/10).toString();
+  const fmt2=x=>(Math.round(x*100)/100).toString();
+
+  // ===== 比例与单价 =====
+  function defS(){ const t=state.defP+state.defG+state.defR; return t>0? state.defP/t : 0.5; }
+  function getS(){ return state.inputs.s==null? defS() : state.inputs.s; }
+  // 金红混合单价：由校准面板的 金:红 推出（4:1→1.8；想要实战的 2.2 就把金:红改成 7:3）
+  function grMix(){ const d=state.defG+state.defR; return d>0? (state.priceGold*state.defG+state.priceRed*state.defR)/d : 0; }
+
+  // ===== 进阶：均格/均价（游戏显示两位小数；实测是截断不是四舍五入——36/13=2.7692 显示 2.76） =====
+  // 兼容两种取整：显示 ḡ ⇒ 真值 ∈ [ḡ−0.005, ḡ+0.01)，G=总格、n=件数，都是整数
+  function parseAvg(str){
+    str=String(str||'').trim();
+    if(!/^\d+(\.\d+)?$/.test(str)) return null;
+    const v=parseFloat(str); return v>0? v : null;
+  }
+  // 枚举所有可行 (G,n)：返回升序候选 G 列表 + 每个 G 对应的可行件数
+  function candidates(gbar,R){
+    const ns=new Map();
+    const nMax=Math.floor(R/Math.max(gbar-0.005,0.01));
+    for(let n=1;n<=nMax;n++){
+      const lo=Math.max(1,Math.ceil(n*(gbar-0.005)-1e-9));
+      const hi=Math.min(R,Math.floor(n*(gbar+0.01)-1e-9));
+      for(let G=lo;G<=hi;G++){ if(!ns.has(G)) ns.set(G,[]); ns.get(G).push(n); }
+    }
+    return {list:[...ns.keys()].sort((a,b)=>a-b), ns:ns};
+  }
+  // 候选里挑最接近 target 的；打平取更大（紫更多→估值更低，出价保守）
+  function pickG(list,target){
+    let best=null;
+    for(const G of list){
+      const d=Math.abs(G-target);
+      if(!best || d<best.d-1e-9 || (Math.abs(d-best.d)<1e-9 && G>best.G)) best={G:G,d:d};
+    }
+    return best? best.G : null;
+  }
+
+  // ===== 紫色图鉴（master 在 tujian.md，改完跑 python3 sync_tujian.py 同步进来） =====
+  /*TUJIAN_START*/
+  const TUJIAN_PURPLE=[
+  ['加特林重机枪',31688,10],
+  ['限定真人展示牌',25000,6],
+  ['黑曜石原石',23760,4],
+  ['全地形卡丁车',22064,9],
+  ['翡翠原石',21000,4],
+  ['可折叠高韧性防护盾',20082,12],
+  ['显卡扩展坞',19096,9],
+  ['赛车座椅',18872,9],
+  ['和田玉原石',18240,4],
+  ['铜矿堆',16520,4],
+  ['AWM狙击步枪',16310,5],
+  ['伊比利亚火腿',16212,6],
+  ['混合动力单元',15680,9],
+  ['玉山子',15456,4],
+  ['彩色打印机',14364,6],
+  ['家用制氧呼吸机',14240,4],
+  ['《淳化阁帖》宋拓本仿制册页',14112,4],
+  ['手办展示架',13251,8],
+  ['1克拉钻石',13000,1],
+  ['除颤仪',12976,6],
+  ['M249轻机枪',12584,8],
+  ['超声波治疗仪',12581,6],
+  ['超级电动车电池组',12296,6],
+  ['铜钟',12045,9],
+  ['VR头显',12000,4],
+  ['高级驾驶辅助系统',11940,4],
+  ['电脑主板',11880,4],
+  ['牙帆船',11768,6],
+  ['限量画集',11760,4],
+  ['M系列自动步枪',11752,8],
+  ['蝉翼拓片宣纸',11520,4],
+  ['针灸人模型',11424,6],
+  ['二十年汾酒',11280,4],
+  ['青金石',10960,1],
+  ['竞赛级复合弓',10920,4],
+  ['专业级充气泵',10620,4],
+  ['智能马桶',10542,6],
+  ['数位屏',10500,4],
+  ['青金石盒',10380,4],
+  ['汉元素潮服',10332,6],
+  ['金栗山藏经纸',10260,4],
+  ['电动摩托车',10080,6],
+  ['铜香炉',9960,4],
+  ['输液泵',9880,4],
+  ['洛丽塔小裙子',9749,6],
+  ['赛车方向盘',9604,4],
+  ['青花瓷瓶',9600,4],
+  ['螺钿妆匣',9440,4],
+  ['壁挂式空调',9115,3],
+  ['RPG火箭筒',8976,4],
+  ['宝宝哄睡椅',8974,4],
+  ['现代画家手稿',8940,4],
+  ['机动型水路两用气动靴',8830,4],
+  ['沉香木镂空笔架',8700,2],
+  ['萤石晶体簇',8680,4],
+  ['孔雀石原石',8440,4],
+  ['名牌挎包',8380,4],
+  ['平板电脑',8360,4],
+  ['蕉叶白端砚',8240,4],
+  ['扫地机器人',8115,4],
+  ['按摩椅',7758,4],
+  ['隆中牌制动间隙自动调整臂',7655,2],
+  ['《心经》高僧手抄卷',7472,4],
+  ['激光剑仿真玩具',7380,4],
+  ['自爆式无人机',7140,4],
+  ['蓝龙虾',6960,4],
+  ['临摹版清明上河图',6824,2],
+  ['气腹机',6780,4],
+  ['古韵臂搁',6624,2],
+  ['罗盘仪',6620,4],
+  ['吸尘器',6554,3],
+  ['熟成和牛',6540,4],
+  ['虎睛石',6152,2],
+  ['单克隆抗体药物',6012,2],
+  ['特级鹿茸',5724,2],
+  ['琥珀',5160,1],
+  ['特级初榨茶油',5076,2],
+  ['蓝山咖啡豆',5040,2],
+  ['琥珀挂坠',4828,1],
+  ['冰酒',4788,2],
+  ['大哥大电话',4624,2],
+  ['名牌球鞋',4428,2],
+  ['限量手办',4428,2],
+  ['合金机器人模型',4428,2],
+  ['珍珠',4240,1],
+  ['智能手表',3960,1],
+  ['车辆定位器',3940,1],
+  ['猫屎咖啡',3920,1],
+  ['长白山野山参',3780,2],
+  ['唐卡',3650,1],
+  ['龙涎香',3640,1],
+  ['除湿器',3454,2],
+  ['热感应夜视防护头盔',3180,4],
+  ['视频采集卡',3120,1],
+  ['无线CarPlay盒子',3040,1],
+  ['全天候激光瞄准镜',2720,1],
+  ['隐藏式行车记录仪',2600,1],
+  ['8848烫金手机壳',2560,1],
+  ['金丝眼镜',2514,1],
+  ['轻奢腕表',2460,1],
+  ['运动相机',2400,1],
+  ['西班牙藏红花',2160,1],
+  ['黑钻松露',2100,1]
+  ];
+  const TUJIAN_GOLD=[
+  ['轻量化锂电池',199900,16],
+  ['单人郊游快艇',106500,18],
+  ['氢燃料电池堆栈',101400,9],
+  ['服务器机柜',97382,15],
+  ['孔雀石雕件',96768,9],
+  ['无人作战车',93753,12],
+  ['大圣残缺石像',89461,10],
+  ['刺绣《千里江山图》',88473,8],
+  ['全自动生化分析仪',86130,12],
+  ['波斯毯',85800,12],
+  ['蜘蛛型自走机器人',82740,9],
+  ['现代书法家题字',79825,6],
+  ['错金铜鼎',78540,9],
+  ['移动工作站',78120,9],
+  ['豪华旅行摩托车',77700,9],
+  ['病理监护仪',76233,4],
+  ['重型全生态作战防弹衣',74745,12],
+  ['大展宏图',73682,8],
+  ['财神爷摆件',71499,6],
+  ['数字调音台',70140,9],
+  ['反器材狙击步枪',67600,10],
+  ['中古牛皮沙发',65610,3],
+  ['便携式超声诊断仪',62055,6],
+  ['智能冰箱',61143,8],
+  ['缂丝袍',60600,9],
+  ['医用负压吸引器',60342,6],
+  ['洛可可风格沙龙速写',58395,9],
+  ['芒画派肖像油画',57540,9],
+  ['翡翠观音',56700,3],
+  ['模块化电磁突击步枪试用型',55770,8],
+  ['《黄庭经》卷仿本',55440,2],
+  ['曲面带鱼屏显示器',54495,6],
+  ['伊比利亚橡果火腿',54180,6],
+  ['宗教壁画残片',53550,6],
+  ['锦绣山河靠山石',51801,6],
+  ['高端VR套装',51660,6],
+  ['竞技避震套装',51240,9],
+  ['航空碳纤维鱼竿',50604,4],
+  ['手术用显微镜',49920,4],
+  ['金芽普洱茶',49200,1],
+  ['发财树',48703,8],
+  ['乌木椅',48300,9],
+  ['枝状珊瑚',48096,3],
+  ['隆中牌气压盘式制动器',45231,4],
+  ['金佛塔',43650,6],
+  ['蓝鳍金枪鱼腹',42975,4],
+  ['背挂式无线电干扰发生器',42525,4],
+  ['行业无人机',41850,4],
+  ['心脏支架',40385,4],
+  ['可调式尾翼',39690,6],
+  ['手作羊奶酪',39600,4],
+  ['海蓝宝晶体',39168,3],
+  ['定制晚礼服',38745,6],
+  ['亲签球衣',38745,6],
+  ['《营造法式》彩画作制度图样精仿本',37920,2],
+  ['全画幅微单',37800,4],
+  ['单兵水下推进器',37350,6],
+  ['满分斯诺克纪念球杆',36511,6],
+  ['《敦煌遗书》唐代写经卷仿制卷',35200,4],
+  ['单兵战场信息系统终端',34490,4],
+  ['竞技离合器套件',34425,4],
+  ['托帕石原石',34408,4],
+  ['西瓜碧玺',34344,1],
+  ['白松露',33000,1],
+  ['碳纤维轮毂',31950,4],
+  ['唐刀',30600,4],
+  ['智能温控空调',30159,3],
+  ['浪漫主义风景素描原作',29700,4],
+  ['便携式军用雷达',29500,4],
+  ['银法典',29025,4],
+  ['野生大红袍',29025,1],
+  ['限量时尚杂志',28450,4],
+  ['顶级化妆礼盒',27675,4],
+  ['羊脂玉璧',27450,4],
+  ['亲签球鞋',26605,2],
+  ['赛车方向盘',25875,4],
+  ['植物水彩图',25875,2],
+  ['章丘铁锅',24969,2],
+  ['祈祷书彩绘插页',24435,2],
+  ['伯纳普斯球场VIP赛季票',24332,1],
+  ['变彩欧泊',21840,1],
+  ['黄金打火机',21201,1],
+  ['专业声卡',19845,2],
+  ['康帝葡萄酒',19600,2],
+  ['酱香忘情水',18600,2],
+  ['个性化肿瘤疫苗',16200,1],
+  ['水晶杯',15542,1],
+  ['貔貅茶宠',15345,2],
+  ['铂金胸针',15325,1],
+  ['电影定焦镜头',14850,1],
+  ['南洋金珠',14520,1],
+  ['狗头金',13332,1],
+  ['西湖龙井明前',12825,1],
+  ['长焦镜头',12675,1],
+  ['野生皇冠鱼子酱',12600,1],
+  ['高浓缩磁暴瘫痪手雷',12400,1],
+  ['限定球星收藏卡',12225,1],
+  ['私人飞机租赁证明',11175,1],
+  ['机械腕表',9245,1],
+  ['旗舰手机',7800,1]
+  ];
+  /*TUJIAN_END*/
+  // 每种颜色一个求解器：DP 上下界核验 + 组合枚举（物品可重复出现）
+  function makeSolver(catalog){
+    const DP_K=60, DP_G=160, DIDX=(k,g)=>k*(DP_G+1)+g;
+    let dmin=null, dmax=null, st=null;
+    function build(){
+      if(dmin||!catalog.length) return;
+      st={minP:Math.min(...catalog.map(x=>x[1])), maxP:Math.max(...catalog.map(x=>x[1])),
+          minG:Math.min(...catalog.map(x=>x[2])), maxG:Math.max(...catalog.map(x=>x[2]))};
+      const size=(DP_K+1)*(DP_G+1);
+      dmin=new Float64Array(size).fill(Infinity);
+      dmax=new Float64Array(size).fill(-Infinity);
+      dmin[0]=0; dmax[0]=0;
+      for(let k=1;k<=DP_K;k++)
+        for(let g=1;g<=DP_G;g++){
+          let lo=Infinity, hi=-Infinity;
+          for(const it of catalog){
+            if(it[2]>g) continue;
+            const j=DIDX(k-1,g-it[2]);
+            if(dmin[j]+it[1]<lo) lo=dmin[j]+it[1];
+            if(dmax[j]+it[1]>hi) hi=dmax[j]+it[1];
+          }
+          dmin[DIDX(k,g)]=lo; dmax[DIDX(k,g)]=hi;
+        }
+    }
+    // 图鉴核验：n 件 G 格能否拼出总价 T（DP 上下界，宽松判定）
+    function feasible(n,G,T){
+      if(!catalog.length) return true;
+      build();
+      if(n>DP_K||G>DP_G) return true;
+      const j=DIDX(n,G);
+      return dmin[j]<=T+1e-9 && dmax[j]>=T-1e-9;
+    }
+    // 枚举具体物品组合（小 n 才跑），最多返回 cap 个
+    function combos(n,G,T,cap){
+      if(!catalog.length) return [];
+      build();
+      const res=[]; let nodes=0;
+      const items=[...catalog].sort((a,b)=>b[1]-a[1]);
+      (function dfs(start,k,g,t,acc){
+        if(res.length>=cap||++nodes>200000) return;
+        if(k===0){ if(g===0&&t===0) res.push(acc.slice()); return; }
+        for(let i2=start;i2<items.length;i2++){
+          const p=items[i2][1], gi=items[i2][2];
+          if(p*k<t) break;               // 降序支配性剪枝
+          if(p>t||gi>g) continue;
+          if(t-p<(k-1)*st.minP) continue;
+          if(g-gi>(k-1)*st.maxG || g-gi<(k-1)*st.minG) continue;
+          acc.push(items[i2][0]); dfs(i2,k-1,g-gi,t-p,acc); acc.pop();
+          if(res.length>=cap||nodes>200000) return;
+        }
+      })(0,n,G,T,[]);
+      return res;
+    }
+    // 给定件数 n、总价 T、格数上限 maxG：图鉴里精确枚举可达的格数集合（搜索超限 → null=不确定）
+    const gsCache=new Map();
+    function gridSet(n,T,maxG){
+      if(!catalog.length) return null;
+      build();
+      const key=n+'|'+T+'|'+maxG;
+      if(gsCache.has(key)) return gsCache.get(key);
+      const res=new Set(); let nodes=0, overflow=false;
+      const items=[...catalog].sort((a,b)=>b[1]-a[1]);
+      (function dfs(start,k,t,g){
+        if(++nodes>300000){ overflow=true; return; }
+        if(k===0){ if(t===0) res.add(g); return; }
+        for(let i2=start;i2<items.length;i2++){
+          const p=items[i2][1], gi=items[i2][2];
+          if(p*k<t) break;               // 降序支配性剪枝：后面只更便宜，凑不齐
+          if(p>t) continue;
+          if(g+gi+(k-1)*st.minG>maxG) continue;
+          if(t-p<(k-1)*st.minP) continue;
+          dfs(i2,k-1,t-p,g+gi);
+          if(overflow) return;
+        }
+      })(0,n,T,0);
+      const out=overflow? null : res;
+      gsCache.set(key,out);
+      return out;
+    }
+    return {feasible:feasible, combos:combos, gridSet:gridSet, has:()=>catalog.length>0,
+      avg:()=>catalog.length? catalog.reduce((a,x)=>a+x[2],0)/catalog.length : 3};
+  }
+  const SOLVER={purple:makeSolver(TUJIAN_PURPLE), gold:makeSolver(TUJIAN_GOLD)};
+  // 均价 μ（两位小数显示，兼容截断/四舍五入 → 真值∈[μ−.005, μ+.01)）× 件数 n
+  // → 总价是窗口 [n(μ−.005), n(μ+.01)) 里的整数（宽 .015n，n≤66 至多一个）；没有 → 该件数不可能
+  function exactTotal(mu,n){
+    const T=Math.ceil(n*(mu-0.005)-1e-9);
+    return T<n*(mu+0.01)-1e-9 ? T : null;
+  }
+  let comboKey=null;
+  function renderCombos(list){
+    const el=$('#comboInfo');
+    list=(list||[]).filter(q=>q&&SOLVER[q.key].has());
+    if(!list.length){ comboKey=null; el.style.display='none'; return; }
+    const key=list.map(q=>q.key+q.n+'_'+q.G+'_'+q.T).join('|');   // 换候选时避免每帧重跑 DFS
+    if(key===comboKey) return;
+    comboKey=key;
+    const one=c=>{ const m=new Map(); c.forEach(x=>m.set(x,(m.get(x)||0)+1));
+      return [...m].map(([nm,k])=>k>1?`${nm}×${k}`:nm).join(' + '); };
+    const parts=[];
+    for(const q of list){
+      const cs=SOLVER[q.key].combos(q.n,q.G,q.T,6);
+      if(cs.length) parts.push(`<b>${q.label}色图鉴匹配</b>：`+cs.slice(0,3).map(one).join('<br>')
+        +(cs.length>3?`<br>…共${cs.length>=6?' ≥6':' '+cs.length} 种`:''));
+    }
+    if(!parts.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    el.innerHTML=parts.join('<div style="border-top:1px dashed var(--line);margin:6px 0"></div>');
+  }
+
+  // calc() 留给按钮用的现场快照
+  let lastR=null;
+  let SNAP={purple:null, gold:null};   // 每色 {P,n,auto,cands,pool,target,manual,verified}
+  let JOINT=null;                      // 紫金联合候选 {list:[{P,G,red,d}…]}，按贴近默认比例排序
+  let SLIDER={mode:'pgr', thumb:0, tick:0, shareHTML:'—', eqText:'—', unitHTML:'—', labTop:'金红 多', labBot:'紫 多', note:'', locked:false};
+
+  // 单色求解：均格(两位小数)→候选(G,n)；均价→唯一整数总价 + 图鉴核验；手填总格覆盖
+  function solveColor(label, solver, gbarStr, muStr, manualStr, pool, target, warn){
+    const gbar=parseAvg(gbarStr), mu=parseAvg(muStr);
+    const out={P:null, n:null, T:null, exactV:null, verified:false, snap:null, comboQ:null};
+    let cands=null, auto=null;
+    if(gbar && pool>0){
+      const c=candidates(gbar,pool);
+      if(!c.list.length){
+        warn.push(label+'色均格太大：剩余格放不下一件');
+      }else if(mu!=null && solver.has()){
+        const list=[], ns=new Map(), Ts=new Map(), TsN=new Map();
+        for(const G of c.list){
+          const okN=[]; let T0=null;
+          for(const n of c.ns.get(G)){
+            const T=exactTotal(mu,n);
+            if(T!=null && solver.feasible(n,G,T)){ okN.push(n); TsN.set(G+'|'+n,T); if(T0==null) T0=T; }
+          }
+          if(okN.length){ list.push(G); ns.set(G,okN); Ts.set(G,T0); }
+        }
+        if(list.length){ cands={list:list,ns:ns,Ts:Ts,TsN:TsN}; out.verified=true; }
+        else { cands=c; warn.push(label+'色均价+图鉴没有可行解：检查输入（或图鉴有漏），先按均格估'); }
+      }else{
+        cands=c;
+      }
+      if(cands) auto=pickG(cands.list, target);
+    }else if(mu!=null && /^\d+\.\d\d$/.test(String(muStr).trim()) && solver.has() && pool>0){
+      // 均价单飞（不靠均格）：整数窗口筛掉不可能的件数 → 图鉴精确枚举可行 (G,n,T)
+      // 门槛：输满两位小数才启动（避免打字打一半就触发大搜索）
+      const ns=new Map(), Ts=new Map(), TsN=new Map();
+      let loose=false;
+      for(let n=1;n<=Math.min(pool,40);n++){
+        const T=exactTotal(mu,n);
+        if(T==null) continue;
+        // 件数小 → 图鉴精确枚举；搜不动（超限/件数大）→ 退回 DP 上下界宽松核验，候选不整档丢弃
+        let gs = n<=8? solver.gridSet(n,T,pool) : null;
+        if(gs==null){
+          loose=true; gs=[];
+          for(let G=1;G<=pool;G++) if(solver.feasible(n,G,T)) gs.push(G);
+        }
+        for(const G of gs){
+          if(G<1||G>pool) continue;
+          if(!ns.has(G)) ns.set(G,[]);
+          ns.get(G).push(n);
+          TsN.set(G+'|'+n,T);
+          if(!Ts.has(G)) Ts.set(G,T);
+        }
+      }
+      if(ns.size){
+        cands={list:[...ns.keys()].sort((a,b)=>a-b), ns:ns, Ts:Ts, TsN:TsN};
+        out.verified=true;
+        auto=pickG(cands.list, target);
+        if(loose) warn.push(`${label}色：部分件数档组合空间太大，用了宽松核验（候选偏宽，配均格更准）`);
+      }else{
+        warn.push(label+'色：均价在图鉴里拼不出组合，检查输入');
+      }
+    }
+    const manual=String(manualStr||'').trim();
+    if(manual!==''){
+      const m=parseInt(manual,10);
+      if(!isNaN(m)&&m>=0) out.P=m;
+    }else if(auto!=null) out.P=auto;
+    if(out.P!=null && out.P>pool){ warn.push(`${label}色总格 ${out.P} 超过可用 ${pool} 格，按 ${pool} 计算`); out.P=Math.max(0,pool); }
+    if(out.P!=null && cands){
+      const arr=cands.ns.get(out.P);
+      if(arr&&arr.length){
+        const gb=gbar||solver.avg();   // 没均格时按图鉴平均占格挑件数
+        out.n=arr.reduce((a,b)=>Math.abs(out.P/b-gb)<=Math.abs(out.P/a-gb)?b:a);
+        if(arr.length>1) warn.push(`${label}色件数不唯一（${arr.join('/')}），取 ${out.n}`);
+        if(out.verified){
+          out.T=(cands.TsN&&cands.TsN.has(out.P+'|'+out.n))? cands.TsN.get(out.P+'|'+out.n) : cands.Ts.get(out.P);
+          out.exactV=out.T/10000;
+        }
+      }else{
+        warn.push(`${label}色 ${out.P} 格与均格${out.verified?'+图鉴':''}不相容，用 ＋/− 看可行候选`);
+      }
+    }
+    // 只有均价+手填总格（没均格）：用图鉴反推件数
+    if(out.P!=null && out.P>0 && out.n==null && mu!=null && solver.has()){
+      const hits=[];
+      for(let n=1;n<=Math.min(out.P,60);n++){
+        const T=exactTotal(mu,n);
+        if(T!=null && solver.feasible(n,out.P,T)) hits.push([n,T]);
+      }
+      if(hits.length===1){ out.n=hits[0][0]; out.T=hits[0][1]; out.exactV=out.T/10000; out.verified=true; }
+      else if(hits.length>1) warn.push(`${label}色：仅凭均价件数不唯一（${hits.map(h=>h[0]).join('/')}）`);
+      else warn.push(`${label}色：均价与 ${out.P} 格在图鉴里拼不出来`);
+    }
+    if(mu!=null && out.exactV==null && out.n!=null){
+      const T=exactTotal(mu,out.n);
+      if(T!=null){ out.T=T; out.exactV=T/10000; }
+    }
+    out.snap={P:out.P, n:out.n, auto:auto, cands:cands, pool:pool, target:target, manual:manual!=='', verified:out.verified};
+    if(out.verified && out.P!=null && out.n!=null && out.n<=6 && out.T!=null)
+      out.comboQ={key:label==='紫'?'purple':'gold', label:label, n:out.n, G:out.P, T:out.T};
+    return out;
+  }
+
+  // ===== 计算 =====
+  function calc(){
+    const i=state.inputs;
+    const total=+i.total||0, gw=+i.gw||0, blue=+i.blue||0;
+    const R=total-gw-blue;
+    $('#poolR').textContent = total>0? R : '—';
+    const warn=[];
+    lastR=null; SNAP={purple:null, gold:null}; JOINT=null;
+
+    if(total<=0 || R<0){
+      if(R<0) warn.push('绿白+蓝 超过总格数，检查输入');
+      computeSlider(null);
+      $('#rec').textContent='—'; $('#chips').innerHTML='';
+      $('#warn').textContent=warn.join('；'); renderAdvInfo(); renderCombos(null); renderSlider(); return;
+    }
+    lastR=R;
+
+    const s=getS(), mix=grMix();
+    const unit = state.pricePurple*s + mix*(1-s);  // 紫金红混合单价（基础先验）
+    const blueV = blue*state.priceBlue;
+    let value, chips;
+    // chips 纯显示每种颜色的格数
+    const dots=(...cs)=>cs.map((c,k)=>`<span class="dot" style="background:var(--${c})${k?';margin-left:-4px':''}"></span>`).join('');
+    const gwChip=[dots('green','white')+'绿白', gw+'格'];
+    const blueChip=[dots('blue')+'蓝', blue+'格'];
+    // 没确定的颜色按当前比例拆成估计格数（≈ 标记），三者和恒等于池子
+    const estChips=pool=>{
+      let p=Math.round(pool*s), g=Math.round(pool*(1-s)*defGr()), r=pool-p-g;
+      if(r<0){ g+=r; r=0; if(g<0){ p+=g; g=0; } }
+      return [[dots('purple')+'紫','≈'+p+'格'], [dots('gold')+'金','≈'+g+'格'], [dots('red')+'红','≈'+r+'格']];
+    };
+
+    if(i.mode==='adv'){
+      const comboQ=[];
+      // 推荐候选一律按校准面板的默认比例算；滑条只影响未确定部分的估价，不暗中影响推荐
+      const warnP=[];
+      let resP=solveColor('紫', SOLVER.purple, i.avgGrid, i.avgPrice, i.purpleTotal, R, defS()*R, warnP);
+      // 联合优化：紫金均格都在 → 枚举 (紫,金) 组合（红=剩余），按整体贴近默认比例排序
+      const manualP=String(i.purpleTotal).trim()!=='', manualG=String(i.goldTotal).trim()!=='';
+      let jointAuto=false;
+      if(resP.snap.cands && (parseAvg(i.goldAvgGrid)||parseAvg(i.goldAvgPrice))){
+        const probe=solveColor('金', SOLVER.gold, i.goldAvgGrid, i.goldAvgPrice, '', R, 0, []);
+        if(probe.snap.cands){
+          const sum=state.defP+state.defG+state.defR;
+          const p0=state.defP/sum, g0=state.defG/sum, r0=state.defR/sum;
+          const opts=[];
+          for(const Pc of resP.snap.cands.list)
+            for(const Gc of probe.snap.cands.list){
+              if(Pc+Gc>R) continue;
+              const red=R-Pc-Gc;
+              opts.push({P:Pc, G:Gc, red:red,
+                d:Math.abs(Pc/R-p0)+Math.abs(Gc/R-g0)+Math.abs(red/R-r0)});
+            }
+          opts.sort((a,b)=>a.d-b.d || b.P-a.P);
+          if(opts.length){
+            JOINT={list:opts.slice(0,7)};
+            if(!manualP && !manualG){
+              // 自动 = 联合最优：借手填通道强制紫取 P*（复算件数/精确价），再恢复自动标记
+              jointAuto=true;
+              resP=solveColor('紫', SOLVER.purple, i.avgGrid, i.avgPrice, String(opts[0].P), R, defS()*R, warn);
+              resP.snap.manual=false; resP.snap.auto=opts[0].P;
+            }
+          }
+        }
+      }
+      if(!jointAuto) warn.push(...warnP);
+      const P=resP.P; SNAP.purple=resP.snap;
+      const gr=getGr();
+      const goldPool=R-(P!=null?P:0);
+      let goldTarget=(P!=null? (R-P) : R*(1-defS()))*defGr();
+      if(JOINT && jointAuto) goldTarget=JOINT.list[0].G;   // 金的 pickG 正好落在联合最优上
+      const resG=solveColor('金', SOLVER.gold, i.goldAvgGrid, i.goldAvgPrice, i.goldTotal, goldPool, goldTarget, warn);
+      const GG=resG.P; SNAP.gold=resG.snap;
+      if(resP.comboQ) comboQ.push(resP.comboQ);
+      if(resG.comboQ) comboQ.push(resG.comboQ);
+
+      if(P!=null && GG!=null){
+        // 紫金都定：剩下全是红，滑条从动
+        let red=R-P-GG;
+        if(red<0){ warn.push('紫+金超过剩余格，红按 0 算'); red=0; }
+        const pV=resP.exactV!=null? resP.exactV : P*state.pricePurple;
+        const gV=resG.exactV!=null? resG.exactV : GG*state.priceGold;
+        const rV=red*state.priceRed;
+        value=blueV+pV+gV+rV;
+        chips=[gwChip, blueChip, [dots('purple')+'紫',P+'格'], [dots('gold')+'金',GG+'格'], [dots('red')+'红',red+'格']];
+        computeSlider({kind:'full', R:R, P:P, GG:GG, red:red, poolV:pV+gV+rV});
+      }else if(P!=null){
+        // 紫已定：滑条改调 金:红
+        const grN=R-P, grUnit=state.priceGold*gr+state.priceRed*(1-gr);
+        const pV=resP.exactV!=null? resP.exactV : P*state.pricePurple, grV=grN*grUnit;
+        value=blueV+pV+grV;
+        const gEst=Math.max(0,Math.min(grN,Math.round(grN*gr))), rEst=grN-gEst;
+        chips=[gwChip, blueChip, [dots('purple')+'紫',P+'格'], [dots('gold')+'金','≈'+gEst+'格'], [dots('red')+'红','≈'+rEst+'格']];
+        computeSlider({kind:'gr', R:R, P:P, grN:grN, grUnit:grUnit, poolV:pV+grV});
+      }else if(GG!=null){
+        // 金已定：滑条改调 紫:红
+        const pr=getPr(), L=R-GG, lUnit=state.pricePurple*pr+state.priceRed*(1-pr);
+        const gV=resG.exactV!=null? resG.exactV : GG*state.priceGold;
+        value=blueV+gV+L*lUnit;
+        const pEst=Math.max(0,Math.min(L,Math.round(L*pr))), rEst=L-pEst;
+        chips=[gwChip, blueChip, [dots('purple')+'紫','≈'+pEst+'格'], [dots('gold')+'金',GG+'格'], [dots('red')+'红','≈'+rEst+'格']];
+        computeSlider({kind:'pr', R:R, GG:GG, L:L, lUnit:lUnit, poolV:gV+L*lUnit});
+      }else{
+        value=blueV+R*unit;
+        chips=[gwChip, blueChip, ...estChips(R)];
+        computeSlider(null);
+      }
+      renderCombos(comboQ);
+    }else{
+      value=blueV+R*unit;
+      chips=[gwChip, blueChip, ...estChips(R)];
+      computeSlider(null);
+      renderCombos(null);
+    }
+
+    $('#rec').textContent=fmt(value);
+    $('#chips').innerHTML=chips.map(c=>`<div class="chip">${c[0]} <b>${c[1]}</b></div>`).join('');
+    $('#warn').textContent=warn.join('；');
+    renderAdvInfo();
+    renderSlider();
+  }
+
+  // ===== 进阶提示行 =====
+  function renderAdvInfo(){
+    const i=state.inputs;
+    const sp=SNAP.purple, sg=SNAP.gold;
+    $('#autoBtnP').style.display=(sp&&sp.manual)?'inline-block':'none';
+    $('#autoBtnG').style.display=(sg&&sg.manual)?'inline-block':'none';
+    $('#purpleTotal').placeholder=(sp&&sp.auto!=null)? sp.auto+'·自动':'—';
+    $('#goldTotal').placeholder=(sg&&sg.auto!=null)? sg.auto+'·自动':'—';
+    renderCands();
+    if(i.mode!=='adv') return;
+    const mk=(label,snap)=>{
+      if(lastR==null) return label+'：先把上面的格数填对';
+      if(!snap||snap.P==null) return label+'：填「均格」或「均价」即可推断格数，两个都填最准';
+      if(snap.manual) return `${label}：手动指定 <b>${snap.P}</b> 格`+(snap.auto!=null?`（自动推荐 ${snap.auto}）`:'');
+      return `${label}：按均格推荐 <b>${snap.P}</b> 格 · 期望 ${fmt(snap.target)} 格 · 候选 ${snap.cands?snap.cands.list.length:0} 个${snap.verified?' · 均价+图鉴已核验':''}`;
+    };
+    $('#advInfo').innerHTML=mk('紫',sp);
+    $('#goldInfo').innerHTML=mk('金',sg);
+  }
+
+  // 候选格数一排可点选：默认「自动」=按默认比例推荐，点数字 = 手动锁定该候选
+  const candsKey={purple:'',gold:''};
+  function renderCands(){
+    // 联合模式：紫金均格都在 → 一排「紫·金·红」组合，点一个同时锁两色
+    if(JOINT && SNAP.purple && SNAP.gold){
+      const jEl=$('#pCands'), gEl=$('#gCands');
+      gEl.style.display='none'; gEl.innerHTML=''; candsKey.gold='';
+      const curP=SNAP.purple.P, curG=SNAP.gold.P;
+      const auto=!SNAP.purple.manual && !SNAP.gold.manual;
+      const sig='J|'+JOINT.list.map(o=>o.P+'.'+o.G).join(',')+'|'+curP+'|'+curG+'|'+auto;
+      if(sig===candsKey.purple) return;
+      candsKey.purple=sig;
+      jEl.style.display='flex';
+      jEl.innerHTML=`<button data-p="" data-g="" class="${auto?'on':''}">自动</button>`
+        + JOINT.list.map(o=>`<button data-p="${o.P}" data-g="${o.G}" class="${(o.P===curP&&o.G===curG)?'on':''}">紫${o.P}·金${o.G}·红${o.red}</button>`).join('');
+      jEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+        state.inputs.purpleTotal=b.dataset.p; $('#purpleTotal').value=b.dataset.p;
+        state.inputs.goldTotal=b.dataset.g;   $('#goldTotal').value=b.dataset.g;
+        save(); calc();
+      });
+      return;
+    }
+    [['purple','#pCands','purpleTotal'],['gold','#gCands','goldTotal']].forEach(([color,sel,key])=>{
+      const el=$(sel), snap=SNAP[color];
+      if(!snap||!snap.cands||!snap.cands.list.length){
+        el.style.display='none'; el.innerHTML=''; candsKey[color]=''; return;
+      }
+      const sig=snap.cands.list.join(',')+'|'+snap.P+'|'+snap.manual;
+      if(sig===candsKey[color]) return;   // 没变就不重建（保住横向滚动位置）
+      candsKey[color]=sig;
+      el.style.display='flex';
+      el.innerHTML=`<button data-v="" class="${snap.manual?'':'on'}">自动</button>`
+        + snap.cands.list.map(G=>`<button data-v="${G}" class="${G===snap.P?'on':''}">${G}</button>`).join('');
+      el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+        state.inputs[key]=b.dataset.v;
+        $('#'+key).value=b.dataset.v;
+        save(); calc();
+      });
+      const on=el.querySelector('button.on[data-v]:not([data-v=""])');
+      if(on) el.scrollLeft=Math.max(0, on.offsetLeft-el.clientWidth/2);
+    });
+  }
+
+  // 候选跳转：有均格时在可行 G 列表里跳，否则 ±1
+  function stepP(color,dir){
+    if(lastR==null||lastR<=0) return;
+    const snap=SNAP[color];
+    const pool=snap? snap.pool : lastR;
+    const cur=snap&&snap.P!=null? snap.P : 0;
+    let next=null;
+    if(snap&&snap.cands){
+      if(dir>0) next=snap.cands.list.find(G=>G>cur);
+      else for(const G of snap.cands.list){ if(G<cur) next=G; else break; }
+    }else{
+      next=cur+dir;
+      if(next<0||next>pool) next=null;
+    }
+    if(next==null) return;
+    const key=color==='purple'?'purpleTotal':'goldTotal';
+    state.inputs[key]=String(next);
+    $('#'+key).value=String(next);
+    save(); calc();
+  }
+
+  // ===== 比例滑条：永远调「当前未确定的部分」 =====
+  // 基础/无信息: 紫↔金红(pgr)；紫已定: 金↔红(gr)；金已定: 紫↔红(pr)；全定: 从动锁定
+  function defGr(){ const d=state.defG+state.defR; return d>0? state.defG/d : 0.5; }
+  function defPr(){ const d=state.defP+state.defR; return d>0? state.defP/d : 0.5; }
+  function getGr(){ return state.inputs.gr2==null? defGr() : state.inputs.gr2; }
+  function getPr(){ return state.inputs.pr2==null? defPr() : state.inputs.pr2; }
+  // 由 calc 填充比例卡片状态；ctx=null → 基础先验
+  function computeSlider(ctx){
+    const scale=state.defP+state.defG+state.defR;
+    const eq=(pu,go,re)=>`${fmt(pu*scale)} : ${fmt(go*scale)} : ${fmt(re*scale)}`;
+    const pct=x=>(x*100).toFixed(1)+'%';
+    if(ctx&&ctx.kind==='full'){
+      const R=ctx.R, gSh=(ctx.GG+ctx.red)>0? ctx.GG/(ctx.GG+ctx.red) : 0;
+      SLIDER={mode:'gr', thumb:1-gSh, tick:1-defGr(),
+        shareHTML:`金 <b>${pct(gSh)}</b> · 红 <b>${pct(1-gSh)}</b>（实际）`,
+        eqText:eq(ctx.P/R, ctx.GG/R, ctx.red/R),
+        unitHTML:`紫金红实际 <b>${fmt2(R>0?ctx.poolV/R:0)}</b> w/格`,
+        labTop:'金 多', labBot:'红 多',
+        note:'紫金都已确定：滑条从动展示', locked:true};
+    }else if(ctx&&ctx.kind==='gr'){
+      const g=getGr(), R=ctx.R;
+      SLIDER={mode:'gr', thumb:1-g, tick:1-defGr(),
+        shareHTML:`金 <b>${pct(g)}</b> · 红 <b>${pct(1-g)}</b>（金红池 ${ctx.grN} 格）`,
+        eqText:eq(ctx.P/R, ctx.grN/R*g, ctx.grN/R*(1-g)),
+        unitHTML:`金红单价 <b>${fmt2(ctx.grUnit)}</b> · 全池 <b>${fmt2(R>0?ctx.poolV/R:0)}</b> w/格`,
+        labTop:'金 多', labBot:'红 多',
+        note:'紫已确定：滑条改调 金:红', locked:false};
+    }else if(ctx&&ctx.kind==='pr'){
+      const p=getPr(), R=ctx.R;
+      SLIDER={mode:'pr', thumb:1-p, tick:1-defPr(),
+        shareHTML:`紫 <b>${pct(p)}</b> · 红 <b>${pct(1-p)}</b>（紫红池 ${ctx.L} 格）`,
+        eqText:eq(ctx.L/R*p, ctx.GG/R, ctx.L/R*(1-p)),
+        unitHTML:`紫红单价 <b>${fmt2(ctx.lUnit)}</b> · 全池 <b>${fmt2(R>0?ctx.poolV/R:0)}</b> w/格`,
+        labTop:'紫 多', labBot:'红 多',
+        note:'金已确定：滑条改调 紫:红', locked:false};
+    }else{
+      const s0=getS(), g0=defGr();
+      const u=state.pricePurple*s0+grMix()*(1-s0);
+      SLIDER={mode:'pgr', thumb:s0, tick:defS(),
+        shareHTML:`紫 <b>${pct(s0)}</b> · 金红 <b>${pct(1-s0)}</b>`,
+        eqText:eq(s0, (1-s0)*g0, (1-s0)*(1-g0)),
+        unitHTML:`紫金红混合 <b>${fmt2(u)}</b> w/格`,
+        labTop:'金红 多', labBot:'紫 多',
+        note:'', locked:false};
+    }
+  }
+  function setS(v){
+    if(SLIDER.locked) return;
+    v=clamp(Math.round(v*200)/200,0,1);
+    if(SLIDER.mode==='gr') state.inputs.gr2=1-v;
+    else if(SLIDER.mode==='pr') state.inputs.pr2=1-v;
+    else state.inputs.s=v;
+    save(); calc();
+  }
+  function renderSlider(){
+    const m=SLIDER;
+    $('#shareLine').innerHTML=m.shareHTML;
+    $('#eqRatio').textContent=m.eqText;
+    $('#unitLine').innerHTML=m.unitHTML;
+    const H=$('#vtrack').clientHeight, th=18;
+    $('#vthumb').style.top=(clamp(m.thumb,0,1)*(H-th))+'px';
+    $('#vtick').style.top=(clamp(m.tick,0,1)*(H-th)+th/2)+'px';
+    $('#vlabTop').textContent=m.labTop; $('#vlabBot').textContent=m.labBot;
+    const tk=$('#vtrack');
+    tk.classList.remove('mode-gr','mode-pr');
+    if(m.mode!=='pgr') tk.classList.add('mode-'+m.mode);
+    const st=$('#ratioState');
+    st.style.display=m.note?'block':'none'; st.textContent=m.note;
+    document.querySelector('.vslider').style.opacity=m.locked? .45:'';
+  }
+  const track=$('#vtrack'); let dragging=false;
+  const yToS=y=>{ const r=track.getBoundingClientRect(); return clamp((y-r.top-9)/(r.height-18),0,1); };
+  track.addEventListener('pointerdown',e=>{ if(SLIDER.locked) return; dragging=true; track.setPointerCapture(e.pointerId); setS(yToS(e.clientY)); });
+  track.addEventListener('pointermove',e=>{ if(dragging) setS(yToS(e.clientY)); });
+  track.addEventListener('pointerup',()=>dragging=false);
+  track.addEventListener('pointercancel',()=>dragging=false);
+  $('#grPlus').onclick=()=>setS(clamp(SLIDER.thumb,0,1)-0.01);   // 上＋ → 朝顶端挪 1%
+  $('#grMinus').onclick=()=>setS(clamp(SLIDER.thumb,0,1)+0.01);  // 下− → 朝底端挪 1%
+  $('#resetS').onclick=()=>{
+    if(SLIDER.mode==='gr') state.inputs.gr2=null;
+    else if(SLIDER.mode==='pr') state.inputs.pr2=null;
+    else state.inputs.s=null;
+    save(); calc();
+  };
+
+  // ===== 模式切换 =====
+  function renderMode(){
+    const seg=$('#modeSeg'); seg.innerHTML='';
+    [['basic','基础'],['adv','进阶']].forEach(([id,name])=>{
+      const b=document.createElement('button');
+      b.textContent=name; b.className=state.inputs.mode===id?'on':'';
+      b.onclick=()=>{ state.inputs.mode=id; save(); renderMode(); calc(); };
+      seg.appendChild(b);
+    });
+    $('#advCard').style.display = state.inputs.mode==='adv'? 'block':'none';
+  }
+
+  // ===== 步进器（总/绿白/蓝） =====
+  function renderSteppers(){
+    document.querySelectorAll('.stepper[data-k]').forEach(el=>{
+      const k=el.dataset.k;
+      el.innerHTML=`<button data-d="-1">−</button><input inputmode="numeric" value="${state.inputs[k]}"><button data-d="1">＋</button>`;
+      const inp=el.querySelector('input');
+      el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+        state.inputs[k]=Math.max(0,(+state.inputs[k]||0)+(+b.dataset.d));
+        inp.value=state.inputs[k]; save(); calc();
+      });
+      inp.oninput=()=>{ state.inputs[k]=Math.max(0,parseInt(inp.value||'0',10)||0); save(); calc(); };
+    });
+  }
+
+  // ===== 校准面板 =====
+  function renderCalib(){
+    const c=$('#calib'); c.innerHTML='';
+    const add=(label,val,onset)=>{
+      const row=document.createElement('div'); row.className='mini';
+      row.innerHTML=`<label>${label}</label>`;
+      const i=document.createElement('input'); i.type='text'; i.inputMode='decimal'; i.value=val;
+      i.onchange=()=>{ const v=parseFloat(i.value); if(!isNaN(v)) onset(v); save(); renderSlider(); calibInfo(); calc(); };
+      row.appendChild(i); c.appendChild(row);
+    };
+    add('蓝单价 w/格', state.priceBlue, v=>state.priceBlue=v);
+    add('紫单价 w/格', state.pricePurple, v=>state.pricePurple=v);
+    add('金单价 w/格', state.priceGold, v=>state.priceGold=v);
+    add('红单价 w/格', state.priceRed, v=>state.priceRed=v);
+    add('默认比例 · 紫', state.defP, v=>state.defP=v);
+    add('默认比例 · 金', state.defG, v=>state.defG=v);
+    add('默认比例 · 红', state.defR, v=>state.defR=v);
+    const lg=document.createElement('div'); lg.className='legend'; lg.id='calibInfo';
+    c.appendChild(lg);
+    const reset=document.createElement('button'); reset.className='btn-ghost'; reset.textContent='恢复默认参数';
+    reset.style.marginTop='10px';
+    reset.onclick=()=>{ const inp=state.inputs; state=Object.assign({},DEFAULTS); state.inputs=inp; save(); renderAll(); };
+    c.appendChild(reset);
+  }
+  function calibInfo(){
+    const el=$('#calibInfo'); if(!el) return;
+    el.innerHTML=`默认紫占比 ${(defS()*100).toFixed(1)}% · 金红混合 <b>${fmt2(grMix())}w/格</b>（金:红=4:1→1.8；实战感觉偏 2.2 就改成 7:3）`;
+  }
+
+  // ===== 进阶输入事件 =====
+  ['avgGrid','avgPrice','goldAvgGrid','goldAvgPrice'].forEach(k=>{
+    $('#'+k).oninput=()=>{ state.inputs[k]=$('#'+k).value; save(); calc(); };
+  });
+  ['purpleTotal','goldTotal'].forEach(k=>{
+    $('#'+k).oninput=()=>{
+      const el=$('#'+k); const v=el.value.replace(/\D/g,'');
+      if(v!==el.value) el.value=v;
+      state.inputs[k]=v; save(); calc();
+    };
+  });
+  $('#pPrev').onclick=()=>stepP('purple',-1);
+  $('#pNext').onclick=()=>stepP('purple',1);
+  $('#gPrev').onclick=()=>stepP('gold',-1);
+  $('#gNext').onclick=()=>stepP('gold',1);
+  $('#autoBtnP').onclick=()=>{ state.inputs.purpleTotal=''; $('#purpleTotal').value=''; save(); calc(); };
+  $('#autoBtnG').onclick=()=>{ state.inputs.goldTotal=''; $('#goldTotal').value=''; save(); calc(); };
+  // 一键清空重开：清掉本局所有输入和滑条，校准参数保留
+  $('#clearAll').onclick=()=>{
+    Object.assign(state.inputs,{total:0, gw:0, blue:0, s:null, gr2:null, pr2:null,
+      avgGrid:'', avgPrice:'', purpleTotal:'', goldAvgGrid:'', goldAvgPrice:'', goldTotal:''});
+    save(); renderAll();
+  };
+
+  function renderAll(){
+    renderMode(); renderSteppers(); renderCalib(); calibInfo();
+    ['avgGrid','avgPrice','goldAvgGrid','goldAvgPrice','purpleTotal','goldTotal'].forEach(k=>{
+      $('#'+k).value=state.inputs[k]||'';
+    });
+    calc();
+  }
+  renderAll();
+  </script>
+</body>
+</html>
